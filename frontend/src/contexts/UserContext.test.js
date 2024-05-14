@@ -8,9 +8,7 @@ jest.mock('jwt-decode');
 jest.mock('axios');
 
 const TestComponent = () => {
-  const { currentUser, login, logout, signup, updateUser } = useUser();
-
-  console.log("Current User in TestComponent:", currentUser);
+  const { currentUser, login, logout, signup, applyToJob } = useUser();
 
   return (
     <div>
@@ -18,7 +16,7 @@ const TestComponent = () => {
       <button onClick={() => login({ username: 'testuser', password: 'password' })}>Login</button>
       <button onClick={logout}>Logout</button>
       <button onClick={() => signup({ username: 'newuser', password: 'password' })}>Signup</button>
-      <button onClick={() => updateUser({ firstName: 'Updated' })}>Update User</button>
+      <button onClick={() => applyToJob('testuser', 1)}>Apply to Job</button>
     </div>
   );
 };
@@ -40,7 +38,6 @@ describe('UserContext', () => {
       </UserProvider>
     );
 
-    console.log('Token in localStorage:', localStorage.getItem('token')); // Add logging
     await waitFor(() => expect(screen.getByText('authorizedUser')).toBeInTheDocument());
   });
 
@@ -68,22 +65,22 @@ describe('UserContext', () => {
     const token = 'validTokenForAuthorizedUser';
     jwtDecode.mockReturnValue({ username: 'testuser', exp: Date.now() / 1000 + 1000 });
     localStorage.setItem('token', token);
-  
+
     render(
       <UserProvider>
         <TestComponent />
       </UserProvider>
     );
-  
+
     await waitFor(() => expect(screen.getByText('testuser')).toBeInTheDocument());
-  
+
     act(() => {
       screen.getByText('Logout').click();
     });
-  
+
     await waitFor(() => expect(screen.getByText('No User')).toBeInTheDocument());
     expect(localStorage.getItem('token')).toBe(null); 
-  });  
+  });
 
   test('should handle signup', async () => {
     const token = 'validTokenForNewUser';
@@ -105,12 +102,11 @@ describe('UserContext', () => {
     expect(localStorage.getItem('token')).toBe(token);
   });
 
-  test('should handle updateUser', async () => {
+  test('should handle applying to job', async () => {
     const token = 'validTokenForAuthorizedUser';
     const decodedToken = { username: 'testuser', exp: Date.now() / 1000 + 1000 };
     jwtDecode.mockReturnValue(decodedToken);
     localStorage.setItem('token', token);
-    axios.patch.mockResolvedValue({ data: { username: 'testuser', firstName: 'Updated' } });
 
     render(
       <UserProvider>
@@ -121,9 +117,12 @@ describe('UserContext', () => {
     await waitFor(() => expect(screen.getByText('testuser')).toBeInTheDocument());
 
     act(() => {
-      screen.getByText('Update User').click();
+      screen.getByText('Apply to Job').click();
     });
 
-    await waitFor(() => expect(screen.getByText('testuser')).toBeInTheDocument());
+    await waitFor(() => {
+      const appliedJobs = JSON.parse(localStorage.getItem('applied_jobs_testuser'));
+      expect(appliedJobs).toContain(1);
+    });
   });
 });

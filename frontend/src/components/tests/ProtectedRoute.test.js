@@ -8,16 +8,15 @@ import { jwtDecode } from 'jwt-decode';
 jest.mock('jwt-decode');
 
 const CompaniesComponent = () => <div>Companies Page</div>;
+const LoginComponent = () => <div>Login Page</div>;
 
-const renderWithRouter = async (ui, { route = '/', token = null } = {}) => {
-    window.history.pushState({}, 'Test page', route);
-
+const renderWithRouter = ({ route = '/', token = null } = {}) => {
     if (token) {
         jwtDecode.mockImplementation(() => ({ username: 'authorizedUser', exp: Date.now() / 1000 + 1000 }));
         localStorage.setItem('token', token);
     }
 
-    const result = render(
+    return render(
         <UserProvider>
             <MemoryRouter initialEntries={[route]}>
                 <Routes>
@@ -27,14 +26,11 @@ const renderWithRouter = async (ui, { route = '/', token = null } = {}) => {
                     <Route path="/companies" element={<ProtectedRoute />}>
                         <Route index element={<CompaniesComponent />} />
                     </Route>
-                    <Route path="/login" element={<div>Login Page</div>} />
+                    <Route path="/login" element={<LoginComponent />} />
                 </Routes>
             </MemoryRouter>
         </UserProvider>
     );
-
-    await waitFor(() => {}); // Wait for any effects to run
-    return result;
 };
 
 describe('ProtectedRoute', () => {
@@ -44,16 +40,16 @@ describe('ProtectedRoute', () => {
     });
 
     test('redirects to login if not authenticated', async () => {
-        await renderWithRouter(<ProtectedRoute />, { route: '/companies' });
-        expect(screen.getByText('Login Page')).toBeInTheDocument();
+        renderWithRouter({ route: '/companies' });
+        await waitFor(() => expect(screen.getByText('Login Page')).toBeInTheDocument());
     });
 
     test('renders companies page if authenticated', async () => {
-        await renderWithRouter(<ProtectedRoute />, { route: '/companies', token: 'validTokenForAuthorizedUser' });
-
-        // Add a delay to ensure the context updates
-        await new Promise((r) => setTimeout(r, 100));
-
-        await waitFor(() => expect(screen.getByText('Companies Page')).toBeInTheDocument());
+        renderWithRouter({ route: '/companies', token: 'validTokenForAuthorizedUser' });
+        
+        await waitFor(() => {
+            expect(screen.queryByText('Login Page')).not.toBeInTheDocument();
+            expect(screen.getByText('Companies Page')).toBeInTheDocument();
+        });
     });
 });

@@ -34,21 +34,27 @@ describe('JobCard', () => {
     });
 
     test('handles apply click correctly', async () => {
-        const applyToJobMock = jest.fn(() => localStorage.setItem(`applied_${job.id}`, 'true'));
+        const applyToJobMock = jest.fn(async (username, jobId) => {
+            const appliedJobs = JSON.parse(localStorage.getItem(`applied_jobs_${username}`)) || [];
+            appliedJobs.push(jobId);
+            localStorage.setItem(`applied_jobs_${username}`, JSON.stringify(appliedJobs));
+        });
         useUser.mockReturnValue({ currentUser, applyToJob: applyToJobMock });
     
         render(<JobCard job={job} />);
         const applyButton = screen.getByText('Apply');
         fireEvent.click(applyButton);
     
-        await waitFor(() => expect(window.localStorage.getItem(`applied_${job.id}`)).toBe('true'));
-        expect(applyToJobMock).toHaveBeenCalledWith(currentUser.username, job.id);
-        expect(window.alert).toHaveBeenCalledWith("You have successfully applied for this job!");
+        await waitFor(() => {
+            const appliedJobs = JSON.parse(localStorage.getItem(`applied_jobs_${currentUser.username}`));
+            expect(appliedJobs).toContain(job.id);
+            expect(applyToJobMock).toHaveBeenCalledWith(currentUser.username, job.id);
+            expect(window.alert).toHaveBeenCalledWith("You have successfully applied for this job!");
+        });
     
         const appliedButton = await screen.findByText('Already Applied');
         expect(appliedButton).toBeInTheDocument();
     });
-    
 
     test('renders job information correctly', () => {
         useUser.mockReturnValue({ currentUser, applyToJob: jest.fn() });

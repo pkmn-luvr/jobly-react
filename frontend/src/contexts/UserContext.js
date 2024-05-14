@@ -3,6 +3,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode'; 
 import useLocalStorage from '../hooks/useLocalStorage'; 
 
+
 const UserContext = createContext();
 
 export const useUser = () => useContext(UserContext);
@@ -14,29 +15,34 @@ export const UserProvider = ({ children }) => {
     useEffect(() => {
         const fetchCurrentUser = async () => {
             if (token) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                const decoded = jwtDecode(token);
-                console.log('Decoded token:', decoded); // For debugging
-                setCurrentUser(decoded);
-                console.log('Current user set to:', decoded);
+                try {
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    const decoded = jwtDecode(token);
+                    setCurrentUser(decoded);
+                    console.log('Current user set to:', decoded);
+                } catch (error) {
+                    console.error('Error decoding token:', error);
+                    setCurrentUser(null);
+                }
             } else {
                 setCurrentUser(null);
             }
         };
         fetchCurrentUser();
-        console.log('Token in useEffect:', token); // For debugging
     }, [token]);
+    
 
     const applyToJob = (username, jobId) => {
         try {
-            localStorage.setItem(`applied_${jobId}`, 'true');
-            console.log("Application simulated successfully");
+            const appliedJobs = JSON.parse(localStorage.getItem(`applied_jobs_${username}`)) || [];
+            if (!appliedJobs.includes(jobId)) {
+                appliedJobs.push(jobId);
+                localStorage.setItem(`applied_jobs_${username}`, JSON.stringify(appliedJobs));
+            }
         } catch (error) {
-            console.error("Failed to simulate applying to job:", error);
             throw error;
         }
     };
-
     const login = async (credentials) => {
         try {
             const response = await axios.post('http://localhost:3001/auth/token', credentials);
