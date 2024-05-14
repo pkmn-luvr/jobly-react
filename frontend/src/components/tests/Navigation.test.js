@@ -46,6 +46,10 @@ describe('Navigation', () => {
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Companies')).toBeInTheDocument();
     expect(screen.getByText('Jobs')).toBeInTheDocument();
+
+    // Click on the user dropdown to open it
+    fireEvent.click(screen.getByText('testuser'));
+
     expect(screen.getByText('Profile')).toBeInTheDocument();
     expect(screen.getByText('Logout')).toBeInTheDocument();
   });
@@ -58,6 +62,8 @@ describe('Navigation', () => {
         <Navigation />
       </BrowserRouter>
     );
+
+    fireEvent.click(screen.getByText('testuser'));
 
     const logoutButton = screen.getByText('Logout');
     fireEvent.click(logoutButton);

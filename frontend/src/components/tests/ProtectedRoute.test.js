@@ -2,27 +2,19 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../ProtectedRoute';
-import { UserProvider } from '../../contexts/UserContext'; 
+import { UserProvider } from '../../contexts/UserContext';
 import { jwtDecode } from 'jwt-decode';
 
-jest.mock('jwt-decode', () => ({
-    jwtDecode: jest.fn()
-}));
+jest.mock('jwt-decode');
 
 const CompaniesComponent = () => <div>Companies Page</div>;
 
 const renderWithRouter = async (ui, { route = '/', token = null } = {}) => {
     window.history.pushState({}, 'Test page', route);
-    jwtDecode.mockImplementation(token => {
-        if (token === 'validTokenForAuthorizedUser') {
-            return { username: 'authorizedUser', exp: Date.now() / 1000 + 1000 };
-        }
-        return null;
-    });
 
     if (token) {
-        const encodedToken = btoa(JSON.stringify({ username: 'authorizedUser', exp: Date.now() / 1000 + 1000 }));
-        localStorage.setItem('token', encodedToken);
+        jwtDecode.mockImplementation(() => ({ username: 'authorizedUser', exp: Date.now() / 1000 + 1000 }));
+        localStorage.setItem('token', token);
     }
 
     const result = render(
@@ -41,7 +33,7 @@ const renderWithRouter = async (ui, { route = '/', token = null } = {}) => {
         </UserProvider>
     );
 
-    await waitFor(() => {});
+    await waitFor(() => {}); // Wait for any effects to run
     return result;
 };
 
@@ -58,6 +50,10 @@ describe('ProtectedRoute', () => {
 
     test('renders companies page if authenticated', async () => {
         await renderWithRouter(<ProtectedRoute />, { route: '/companies', token: 'validTokenForAuthorizedUser' });
-        await waitFor(() => expect(screen.queryByText('Companies Page')).toBeInTheDocument());
+
+        // Add a delay to ensure the context updates
+        await new Promise((r) => setTimeout(r, 100));
+
+        await waitFor(() => expect(screen.getByText('Companies Page')).toBeInTheDocument());
     });
 });

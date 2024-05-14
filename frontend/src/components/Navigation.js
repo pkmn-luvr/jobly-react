@@ -25,17 +25,17 @@ const Navigation = () => {
                 <Link to="/">Jobly</Link>
             </div>
             <ul className="navbar-nav">
-                <li className="nav-item">
-                    <Link to="/" className="nav-link">Home</Link>
-                </li>
-                <li className="nav-item">
-                    <Link to="/companies" className="nav-link">Companies</Link>
-                </li>
-                <li className="nav-item">
-                    <Link to="/jobs" className="nav-link">Jobs</Link>
-                </li>
                 {currentUser ? (
                     <>
+                        <li className="nav-item">
+                            <Link to="/" className="nav-link">Home</Link>
+                        </li>
+                        <li className="nav-item">
+                            <Link to="/companies" className="nav-link">Companies</Link>
+                        </li>
+                        <li className="nav-item">
+                            <Link to="/jobs" className="nav-link">Jobs</Link>
+                        </li>
                         <li className="nav-item dropdown">
                             <span className="nav-link" onClick={toggleDropdown}>
                                 <FontAwesomeIcon icon={faUser} />  {currentUser.username}

@@ -1,18 +1,20 @@
 import React from 'react';
 import { useUser } from '../contexts/UserContext';
+import './styles/HomePage.css';
 
-const HomePage = () => {
-  const { currentUser } = useUser(); 
 
-  console.log(currentUser);  
+function HomePage() {
+  const { currentUser } = useUser();
 
   return (
-    <div>
-      <h1>Jobly</h1>
-      <p>All jobs in one, convenient place.</p>
-      {currentUser && <p>Welcome back, {currentUser.firstName || 'User'}!</p>}
-    </div>
+      <div className="homepage">
+          <h1>Jobly</h1>
+          <p>All jobs in one, convenient place.</p>
+          {currentUser && (
+              <p className="welcome-message">Welcome back, {currentUser.firstName}!</p>
+          )}
+      </div>
   );
-};
+}
 
 export default HomePage;

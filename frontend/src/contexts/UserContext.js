@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';  
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'; 
 import useLocalStorage from '../hooks/useLocalStorage'; 
 
 const UserContext = createContext();
@@ -16,12 +16,15 @@ export const UserProvider = ({ children }) => {
             if (token) {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 const decoded = jwtDecode(token);
+                console.log('Decoded token:', decoded); // For debugging
                 setCurrentUser(decoded);
+                console.log('Current user set to:', decoded);
             } else {
                 setCurrentUser(null);
             }
         };
         fetchCurrentUser();
+        console.log('Token in useEffect:', token); // For debugging
     }, [token]);
 
     const applyToJob = (username, jobId) => {
@@ -52,7 +55,7 @@ export const UserProvider = ({ children }) => {
         setToken(null);
         setCurrentUser(null); 
         axios.defaults.headers.common['Authorization'] = null;
-    };
+    };    
 
     const signup = async (userData) => {
         try {
@@ -87,15 +90,11 @@ export const UserProvider = ({ children }) => {
         }
         
     };
-    
-    
-    
 
     return (
         <UserContext.Provider value={{ currentUser, setCurrentUser, applyToJob, login, logout, signup, updateUser }}>
-    {children}
-</UserContext.Provider>
-
+            {children}
+        </UserContext.Provider>
     );
 };
 
